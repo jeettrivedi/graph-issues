@@ -102,11 +102,11 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div className="w-full h-full">
       <SigmaContainer
         graph={graph}
         settings={settings}
-        style={{ height: '100%', width: '100%' }}
+        className="w-full h-full"
       />
     </div>
   );

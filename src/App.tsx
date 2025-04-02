@@ -198,7 +198,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen h-screen flex flex-col">
       <Toaster position="top-right" />
       <div className="bg-black text-white py-2 px-4 shadow-lg">
         <div className="flex items-center justify-between">
@@ -249,68 +249,26 @@ function App() {
         </div>
       </div>
 
-      <main className="flex-grow dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto dark:text-white">
-          {hoveredNode && (
-            <div className="fixed p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-sm z-50">
-              <h3 className="font-semibold text-lg mb-2 dark:text-white">{hoveredNode.data.attributes.title}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">#{hoveredNode.data.attributes.number}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{hoveredNode.data.attributes.body?.substring(0, 100) || 'No description'}...</p>
-            </div>
-          )}
-
-          {selectedNode && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <img
-                      src={selectedNode.attributes.authorAvatar}
-                      alt={selectedNode.attributes.author}
-                      className="w-10 h-10 rounded-full mr-4"
-                    />
-                    <span className="font-medium dark:text-white">{selectedNode.attributes.author}</span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedNode(null)}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <h2 className="text-xl font-semibold mb-2 dark:text-white">{selectedNode.attributes.title}</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">{selectedNode.attributes.body || 'No description'}</p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <span>#{selectedNode.attributes.number}</span>
-                  <span className="mx-2">•</span>
-                  <span>{new Date(selectedNode.attributes.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex-1 p-4">
-            {graphData.nodes.length > 0 && (
-              <div className="w-full h-[calc(100vh-5rem)]">
-                <GraphVisualization
-                  graphData={graphData}
-                  onNodeHover={(node) => {
-                    if (node) {
-                      setHoveredNode({
-                        data: node,
-                        mouseX: 0,
-                        mouseY: 0
-                      });
-                    } else {
-                      setHoveredNode(null);
-                    }
-                  }}
-                  onNodeClick={setSelectedNode}
-                />
-              </div>
-            )}
+      <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
+        {graphData.nodes.length > 0 && (
+          <div className="h-full">
+            <GraphVisualization
+              graphData={graphData}
+              onNodeHover={(node) => {
+                if (node) {
+                  setHoveredNode({
+                    data: node,
+                    mouseX: 0,
+                    mouseY: 0
+                  });
+                } else {
+                  setHoveredNode(null);
+                }
+              }}
+              onNodeClick={setSelectedNode}
+            />
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
