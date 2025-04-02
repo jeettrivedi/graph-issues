@@ -1,7 +1,15 @@
-import React, { useMemo } from "react";
-import { SigmaContainer } from "@react-sigma/core";
-import Graph from "graphology";
+import React, {useEffect, FC} from "react";
+import {
+  SigmaContainer,
+  ControlsContainer,
+  ZoomControl,
+  FullScreenControl,
+  useLoadGraph
+} from "@react-sigma/core";
+import { DirectedGraph } from "graphology";
 import "@react-sigma/core/lib/style.css";
+import { useLayoutCircular } from "@react-sigma/layout-circular";
+import { LayoutForceAtlas2Control } from '@react-sigma/layout-forceatlas2';
 
 export interface Node {
   id: string;
@@ -26,88 +34,107 @@ interface Edge {
   target: string;
 }
 
+interface GraphData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 interface GraphVisualizationProps {
-  graphData: {
-    nodes: Node[];
-    edges: Edge[];
-  };
+  graphData: GraphData;
   onNodeHover: (node: Node | null) => void;
   onNodeClick: (node: Node | null) => void;
 }
 
-const GraphVisualization: React.FC<GraphVisualizationProps> = ({
-  graphData,
-  onNodeHover,
-  onNodeClick,
-}) => {
-  // Create graph instance
-  const graph = useMemo(() => {
-    const g = new Graph();
+// This component handles the graph loading and layout
+const LoadGraph: FC<{ graphData: GraphData }> = ({ graphData }) => {
+  const loadGraph = useLoadGraph();
+  const { assign } = useLayoutCircular();
 
-    // Calculate positions first
-    const radius = 100;
-    const positions = graphData.nodes.map((_, i) => {
-      const angle = (2 * Math.PI * i) / graphData.nodes.length;
-      return {
-        x: radius * Math.cos(angle),
-        y: radius * Math.sin(angle)
-      };
-    });
+  useEffect(() => {
+    // Create graph instance
+    const graph = new DirectedGraph();
 
-    // Add nodes with positions
-    graphData.nodes.forEach((node, i) => {
-      g.addNode(node.id, {
+    // Add nodes
+    graphData.nodes.forEach((node) => {
+      graph.addNode(node.id, {
         label: node.label,
-        size: node.size,
-        x: positions[i].x,
-        y: positions[i].y,
+        size: node.size * 5,
+        x: 0,
+        y: 0,
         attributes: node.attributes
       });
     });
 
     // Add edges
     graphData.edges.forEach((edge) => {
-      g.addEdge(edge.source, edge.target);
+      graph.addDirectedEdge(edge.source, edge.target);
     });
 
-    return g;
-  }, [graphData]);
+    // Load the graph and apply layout
+    loadGraph(graph);
+    assign();
+  }, [graphData, loadGraph, assign]);
 
+  return null;
+};
+
+const GraphVisualization: FC<GraphVisualizationProps> = ({
+  graphData,
+  onNodeHover,
+  onNodeClick,
+}) => {
   const settings = {
     labelColor: { color: "#000000" },
     labelSize: 14,
     labelWeight: "bold",
     defaultNodeColor: "#6366f1",
     defaultEdgeColor: "#94a3b8",
-    renderEdgeLabels: true,
+    renderEdgeLabels: false,
     edgeLabelSize: 12,
-    nodeReducer: (node: string) => {
-      const data = graph.getNodeAttributes(node);
+    nodeReducer: (node: string, data: any) => {
       const firstLabel = data.attributes.labels[0];
       const nodeColor = firstLabel ? `#${firstLabel.color}` : data.attributes.state === "open" ? "#22c55e" : "#ef4444";
       return {
-        x: data.x,
-        y: data.y,
-        size: data.size * 4,
+        ...data,
         label: data.label,
         color: nodeColor,
       };
     },
     edgeReducer: () => ({
-      size: 2,
+      size: 5,
       color: "#94a3b8",
       type: "arrow",
       label: "",
     }),
   };
 
+  const forceAtlasSettings = {
+    settings: {
+      slowDown: 1000,
+      gravity: 0.01,
+      springLength: 100,
+      springConstant: 0.01,
+      damping: 1.5,
+      preventOverlap: 0.5,
+      edgeWeightInfluence: 0.5,
+    },
+  };
+
   return (
     <div className="w-full h-full">
       <SigmaContainer
-        graph={graph}
         settings={settings}
         className="w-full h-full"
-      />
+      >
+        <LoadGraph graphData={graphData} />
+        <ControlsContainer position="bottom-right">
+          <ZoomControl />
+          <LayoutForceAtlas2Control settings={forceAtlasSettings} />
+        </ControlsContainer>
+        <ControlsContainer position="top-right">
+          <FullScreenControl />
+        </ControlsContainer>
+      </SigmaContainer>
     </div>
   );
 };

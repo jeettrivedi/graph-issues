@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@react-sigma/core": "^5.0.2",
+    "@react-sigma/layout-circular": "^5.0.2",
     "@react-sigma/layout-core": "^5.0.2",
     "@react-sigma/layout-forceatlas2": "^5.0.2",
     "graphology": "^0.25.4",
