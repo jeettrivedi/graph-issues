@@ -79,24 +79,30 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     labelWeight: "bold",
     defaultNodeColor: "#6366f1",
     defaultEdgeColor: "#94a3b8",
+    renderEdgeLabels: true,
+    edgeLabelSize: 12,
     nodeReducer: (node: string) => {
       const data = graph.getNodeAttributes(node);
+      const firstLabel = data.attributes.labels[0];
+      const nodeColor = firstLabel ? `#${firstLabel.color}` : data.attributes.state === "open" ? "#22c55e" : "#ef4444";
       return {
         x: data.x,
         y: data.y,
         size: data.size * 4,
         label: data.label,
-        color: data.attributes.state === "open" ? "#22c55e" : "#ef4444",
+        color: nodeColor,
       };
     },
     edgeReducer: () => ({
       size: 2,
       color: "#94a3b8",
+      type: "arrow",
+      label: "",
     }),
   };
 
   return (
-    <div style={{ width: '100%', height: '600px', border: '1px solid #e5e7eb' }}>
+    <div style={{ width: '100%', height: '100%' }}>
       <SigmaContainer
         graph={graph}
         settings={settings}

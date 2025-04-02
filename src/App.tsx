@@ -291,48 +291,22 @@ function App() {
 
           <div className="flex-1 p-4">
             {graphData.nodes.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="w-full h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 rounded-lg shadow-lg">
-                  <GraphVisualization
-                    graphData={graphData}
-                    onNodeHover={(node) => {
-                      if (node) {
-                        setHoveredNode({
-                          data: node,
-                          mouseX: 0,
-                          mouseY: 0
-                        });
-                      } else {
-                        setHoveredNode(null);
-                      }
-                    }}
-                    onNodeClick={setSelectedNode}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-                    <h2 className="text-lg font-semibold mb-2">Graph Data</h2>
-                    <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded overflow-auto max-h-[calc(100vh-12rem)]">
-                      {JSON.stringify(graphData, null, 2)}
-                    </pre>
-                  </div>
-                  {hoveredNode && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-                      <h2 className="text-lg font-semibold mb-2">Hovered Node</h2>
-                      <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded overflow-auto">
-                        {JSON.stringify(hoveredNode.data, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                  {selectedNode && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-                      <h2 className="text-lg font-semibold mb-2">Selected Node</h2>
-                      <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded overflow-auto">
-                        {JSON.stringify(selectedNode, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
+              <div className="w-full h-[calc(100vh-5rem)]">
+                <GraphVisualization
+                  graphData={graphData}
+                  onNodeHover={(node) => {
+                    if (node) {
+                      setHoveredNode({
+                        data: node,
+                        mouseX: 0,
+                        mouseY: 0
+                      });
+                    } else {
+                      setHoveredNode(null);
+                    }
+                  }}
+                  onNodeClick={setSelectedNode}
+                />
               </div>
             )}
           </div>
