@@ -9,6 +9,7 @@ import {
 import { DirectedGraph } from "graphology";
 import "@react-sigma/core/lib/style.css";
 import { useLayoutCircular } from "@react-sigma/layout-circular";
+import { useLayoutRandom } from "@react-sigma/layout-random";
 import { LayoutForceAtlas2Control } from '@react-sigma/layout-forceatlas2';
 
 export interface Node {
@@ -45,11 +46,12 @@ interface GraphVisualizationProps {
   onNodeClick: (node: Node | null) => void;
 }
 
+
 // This component handles the graph loading and layout
 const LoadGraph: FC<{ graphData: GraphData }> = ({ graphData }) => {
-  const loadGraph = useLoadGraph();
-  const { assign } = useLayoutCircular();
 
+  const loadGraph = useLoadGraph();
+  const { assign } = useLayoutRandom();
   useEffect(() => {
     // Create graph instance
     const graph = new DirectedGraph();
@@ -58,7 +60,7 @@ const LoadGraph: FC<{ graphData: GraphData }> = ({ graphData }) => {
     graphData.nodes.forEach((node) => {
       graph.addNode(node.id, {
         label: node.label,
-        size: node.size * 5,
+        size: node.size * 4,
         x: 0,
         y: 0,
         attributes: node.attributes
@@ -101,7 +103,7 @@ const GraphVisualization: FC<GraphVisualizationProps> = ({
       };
     },
     edgeReducer: () => ({
-      size: 5,
+      size: 2,
       color: "#94a3b8",
       type: "arrow",
       label: "",
@@ -110,13 +112,8 @@ const GraphVisualization: FC<GraphVisualizationProps> = ({
 
   const forceAtlasSettings = {
     settings: {
-      slowDown: 1000,
-      gravity: 0.01,
-      springLength: 100,
-      springConstant: 0.01,
-      damping: 1.5,
-      preventOverlap: 0.5,
-      edgeWeightInfluence: 0.5,
+      slowDown:100,
+      gravity: 5,
     },
   };
 

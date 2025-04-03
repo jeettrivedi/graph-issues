@@ -75,42 +75,28 @@ function App() {
   };
 
   const buildGraphData = (issues: GitHubIssue[], commentsMap: Map<number, GitHubComment[]>) => {
-    // First create a map to count incoming references
-    const incomingReferenceCounts = new Map<string, number>();
+    // Create nodes and edges first
+    const nodes: Node[] = [];
+    const edges: Array<{ id: string; source: string; target: string }> = [];
     const issueMap = new Map<number, GitHubIssue>();
+    const inDegreeCount = new Map<string, number>();
 
     // Create a map of all issues for quick lookup
     issues.forEach(issue => {
       issueMap.set(issue.number, issue);
+      // Initialize in-degree count for each issue
+      inDegreeCount.set(`${issue.number}`, 0);
     });
 
-    // Count incoming references first
-    issues.forEach(issue => {
-      const bodyRefs = findIssueReferences(issue.body || '');
-      const comments = commentsMap.get(issue.number) || [];
-      const commentRefs = comments.flatMap(comment => findIssueReferences(comment.body));
-      const allRefs = [...new Set([...bodyRefs, ...commentRefs])];
-
-      allRefs.forEach(refNumber => {
-        const refId = `${refNumber}`;
-        incomingReferenceCounts.set(refId, (incomingReferenceCounts.get(refId) || 0) + 1);
-      });
-    });
-
-    // Create nodes and edges
-    const nodes: Node[] = [];
-    const edges: Array<{ id: string; source: string; target: string }> = [];
-
-    // First create all nodes
+    // Create nodes and collect edges
     issues.forEach(issue => {
       const issueId = `${issue.number}`;
-      const incomingCount = incomingReferenceCounts.get(issueId) || 0;
-
-      // Create node with size based on incoming references
+      
+      // Create node (size will be set after counting edges)
       nodes.push({
         id: issueId,
         label: `#${issue.number}`,
-        size: Math.max(1, incomingCount + 1),
+        size: 1, // default size, will be updated
         attributes: {
           title: issue.title,
           body: issue.body,
@@ -123,18 +109,15 @@ function App() {
           authorAvatar: issue.user.avatar_url
         }
       });
-    });
 
-    // Then create edges only for existing nodes
-    issues.forEach(issue => {
-      const issueId = `${issue.number}`;
+      // Find references in issue body and comments
       const bodyRefs = findIssueReferences(issue.body || '');
       const comments = commentsMap.get(issue.number) || [];
       const commentRefs = comments.flatMap(comment => findIssueReferences(comment.body));
       const allRefs = [...new Set([...bodyRefs, ...commentRefs])];
 
+      // Create edges and count incoming references
       allRefs.forEach(refNumber => {
-        // Only create edge if the referenced issue exists and is not the same issue
         if (issueMap.has(refNumber) && refNumber !== issue.number) {
           const refId = `${refNumber}`;
           edges.push({
@@ -142,8 +125,16 @@ function App() {
             source: issueId,
             target: refId
           });
+          // Increment in-degree count for the target node
+          inDegreeCount.set(refId, (inDegreeCount.get(refId) || 0) + 1);
         }
       });
+    });
+
+    // Update node sizes based on in-degree
+    nodes.forEach(node => {
+      const inDegree = inDegreeCount.get(node.id) || 0;
+      node.size = Math.max(1, inDegree + 1); // Add 1 to make sure even nodes with no incoming edges are visible
     });
 
     return { nodes, edges };
@@ -158,6 +149,36 @@ function App() {
     });
   };
 
+  const fetchAllIssues = async (owner: string, repo: string) => {
+    let allIssues: GitHubIssue[] = [];
+    let page = 1;
+    const per_page = 100; // Maximum allowed by GitHub API
+    
+    while (true) {
+      const response = await fetchWithAuth(
+        `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=${per_page}&page=${page}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch issues');
+      }
+      
+      const issues = await response.json();
+      if (issues.length === 0) break;
+      
+      allIssues = [...allIssues, ...issues];
+      page++;
+
+      // Add a loading toast to show progress
+      toast.loading(`Loaded ${allIssues.length} issues...`, { id: 'loading-issues' });
+    }
+
+    // Dismiss the loading toast
+    toast.dismiss('loading-issues');
+    
+    return allIssues;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateGitHubUrl(repoUrl)) {
@@ -169,10 +190,8 @@ function App() {
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
 
-      // Fetch only open issues
-      const issuesResponse = await fetchWithAuth(`https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100`);
-      if (!issuesResponse.ok) throw new Error('Failed to fetch issues');
-      const issuesData = await issuesResponse.json();
+      // Fetch all issues with pagination
+      const issuesData = await fetchAllIssues(owner, repo);
       setIssues(issuesData);
 
       // Fetch comments for each issue
@@ -188,7 +207,7 @@ function App() {
       // Build and set graph data
       const newGraphData = buildGraphData(issuesData, commentsMap);
       setGraphData(newGraphData);
-      toast.success('Graph data loaded successfully');
+      toast.success(`Loaded ${issuesData.length} issues successfully`);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch repository data');
