@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FiSun, FiMoon } from 'react-icons/fi';
-import GraphVisualization, { Node } from './GraphVisualization';
+import GraphVisualization, { Node } from './components/GraphVisualization';
 
 interface GitHubIssue {
   number: number;
@@ -285,6 +285,7 @@ function App() {
                 }
               }}
               onNodeClick={setSelectedNode}
+              darkMode={darkMode}
             />
           </div>
         )}
