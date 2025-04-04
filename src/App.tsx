@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FiSun, FiMoon } from 'react-icons/fi';
 import GraphVisualization, { Node } from './components/GraphVisualization';
@@ -42,6 +42,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
   });
+  const hasShownWarning = useRef(false);
 
   useEffect(() => {
     const bodyClass = document.body.classList;
@@ -141,25 +142,48 @@ function App() {
   };
 
   const fetchWithAuth = (url: string) => {
-    return fetch(url, {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3+json'
-      }
-    });
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json'
+    };
+
+    if (token) {
+      headers.Authorization = `token ${token}`;
+    }
+
+    return fetch(url, { headers });
   };
 
   const fetchAllIssues = async (owner: string, repo: string) => {
     let allIssues: GitHubIssue[] = [];
     let page = 1;
     const per_page = 100; // Maximum allowed by GitHub API
+    const requestLimit = !token ? 60 : Infinity; // Limit requests if no token
+    let requestCount = 0;
     
     while (true) {
+      // Check if we're about to exceed the request limit
+      if (requestCount >= requestLimit) {
+        toast('Request limit reached. Please provide a GitHub token to fetch more issues.', {
+          icon: '⚠️',
+          duration: 4000
+        });
+        break;
+      }
+
+      requestCount++;
       const response = await fetchWithAuth(
         `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=${per_page}&page=${page}`
       );
       
       if (!response.ok) {
+        // Check for rate limit exceeded
+        if (response.status === 403) {
+          const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+          if (rateLimitRemaining === '0') {
+            const resetTime = new Date(Number(response.headers.get('x-ratelimit-reset')) * 1000);
+            throw new Error(`GitHub API rate limit exceeded. Rate limit will reset at ${resetTime.toLocaleString()}`);
+          }
+        }
         throw new Error('Failed to fetch issues');
       }
       
@@ -171,6 +195,16 @@ function App() {
 
       // Add a loading toast to show progress
       toast.loading(`Loaded ${allIssues.length} issues...`, { id: 'loading-issues' });
+
+      // Check remaining rate limit
+      const rateLimitRemaining = Number(response.headers.get('x-ratelimit-remaining'));
+      if (rateLimitRemaining <= 1) { // Leave 1 request as buffer
+        toast('Approaching rate limit. Please provide a GitHub token to fetch more issues.', {
+          icon: '⚠️',
+          duration: 4000
+        });
+        break;
+      }
     }
 
     // Dismiss the loading toast
@@ -190,27 +224,59 @@ function App() {
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
 
+      // Show warning if no token is provided and we haven't shown it before
+      if (!token && !hasShownWarning.current) {
+        hasShownWarning.current = true;
+        toast('No GitHub token provided. You will be limited to 60 requests per hour. For higher limits, please provide a GitHub token.', {
+          icon: '⚠️',
+          duration: 6000
+        });
+        
+        // Show additional rate limit info
+        toast('Without a token: 60 requests/hour\nWith a token: 5,000 requests/hour', {
+          icon: 'ℹ️',
+          duration: 6000
+        });
+      }
+
       // Fetch all issues with pagination
       const issuesData = await fetchAllIssues(owner, repo);
       setIssues(issuesData);
 
       // Fetch comments for each issue
       const commentsMap = new Map<number, GitHubComment[]>();
-      await Promise.all(issuesData.map(async (issue: GitHubIssue) => {
+      const commentPromises = issuesData.map(async (issue: GitHubIssue) => {
+        // Skip if we're approaching the rate limit for non-token users
+        if (!token && commentsMap.size >= 58) { // Leave 2 requests as buffer
+          return;
+        }
+        
         const commentsResponse = await fetchWithAuth(issue.comments_url);
         if (commentsResponse.ok) {
           const comments = await commentsResponse.json();
           commentsMap.set(issue.number, comments);
         }
-      }));
+      });
+
+      await Promise.all(commentPromises);
 
       // Build and set graph data
       const newGraphData = buildGraphData(issuesData, commentsMap);
       setGraphData(newGraphData);
-      toast.success(`Loaded ${issuesData.length} issues successfully`);
+      
+      // Show success message with appropriate context
+      if (!token && issuesData.length > 0) {
+        toast.success(`Loaded ${issuesData.length} issues (limited due to no token)`);
+      } else {
+        toast.success(`Loaded ${issuesData.length} issues successfully`);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to fetch repository data');
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to fetch repository data');
+      }
     } finally {
       setLoading(false);
     }
@@ -232,7 +298,11 @@ function App() {
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className="w-80 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-gray-800 text-white placeholder-gray-400 py-2 px-4"
+                  className={`w-80 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200
+                    ${darkMode 
+                      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white'
+                    }`}
                   required
                 />
               </div>
@@ -244,14 +314,21 @@ function App() {
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="GitHub Token (Optional)"
-                  className="w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-gray-800 text-white placeholder-gray-400 py-2 px-4"
+                  className={`w-64 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200
+                    ${darkMode 
+                      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white'
+                    }`}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md
+                  ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'} 
+                  text-white bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                  ${darkMode ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-white'}`}
               >
                 {loading ? 'Loading...' : 'Load'}
               </button>
