@@ -424,6 +424,13 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* Version footer */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 p-2 text-xs opacity-50 hover:opacity-100 transition-opacity duration-200">
+        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {__VERSION__}-{__GIT_HASH__}
+        </span>
+      </div>
     </div>
   );
 }
