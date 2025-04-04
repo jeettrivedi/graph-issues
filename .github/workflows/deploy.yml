@@ -71,7 +71,7 @@ jobs:
             --base main \
             --head $BRANCH_NAME \
             --title "chore(deploy): update graph-issues application" \
-            --body "Automated PR to update graph-issues deployment from latest main branch build."
+            --body "Automated PR to update graph-issues deployment from latest main branch build." \
             --label "automated-pr"
         env:
           GITHUB_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }} 
