@@ -8,47 +8,70 @@ interface IssueModalProps {
   onClose: () => void;
 }
 
-const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => {
+const IssueModal: React.FC<IssueModalProps> = ({
+  issue,
+  darkMode,
+  onClose,
+}) => {
   if (!issue) return null;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   return (
-    <div className={`fixed left-4 top-20 h-[calc(100vh-6rem)] w-96 transform transition-transform duration-300 ease-in-out rounded-xl z-10 ${
-      issue ? 'translate-x-0' : '-translate-x-full'
-    } ${darkMode 
-      ? 'bg-gray-800 text-white shadow-2xl border border-gray-700' 
-      : 'bg-white text-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200'
-    }`}>
+    <div
+      className={`fixed left-4 top-20 h-[calc(100vh-6rem)] w-96 transform transition-transform duration-300 ease-in-out rounded-xl z-10 ${
+        issue ? 'translate-x-0' : '-translate-x-full'
+      } ${
+        darkMode
+          ? 'bg-gray-800 text-white shadow-2xl border border-gray-700'
+          : 'bg-white text-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200'
+      }`}
+    >
       <div className="p-6 h-full overflow-y-auto pb-8">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-bold">Issue #{issue.attributes.number}</h2>
+          <h2 className="text-xl font-bold">
+            Issue #{issue.attributes.number}
+          </h2>
           <button
             onClick={onClose}
             className={`p-2 rounded-full hover:bg-opacity-10 ${
               darkMode ? 'hover:bg-white' : 'hover:bg-black'
             }`}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">{issue.attributes.title}</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            {issue.attributes.title}
+          </h3>
           <div className="flex items-center gap-2 mb-4">
-            <span className={`px-2 py-1 rounded-full text-sm ${
-              issue.attributes.state === 'open' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
+            <span
+              className={`px-2 py-1 rounded-full text-sm ${
+                issue.attributes.state === 'open'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
               {issue.attributes.state}
             </span>
             <span className="text-sm text-gray-500">
@@ -77,7 +100,7 @@ const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => 
                 className="px-2 py-1 rounded-full text-sm"
                 style={{
                   backgroundColor: `#${label.color}20`,
-                  color: `#${label.color}`
+                  color: `#${label.color}`,
                 }}
               >
                 {label.name}
@@ -95,11 +118,17 @@ const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => 
                   code: ({ className, children, ...props }) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return match ? (
-                      <code className={`${className} block p-4 rounded-md bg-gray-100 dark:bg-gray-700`} {...props}>
+                      <code
+                        className={`${className} block p-4 rounded-md bg-gray-100 dark:bg-gray-700`}
+                        {...props}
+                      >
                         {children}
                       </code>
                     ) : (
-                      <code className={`${className} px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700`} {...props}>
+                      <code
+                        className={`${className} px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700`}
+                        {...props}
+                      >
                         {children}
                       </code>
                     );
@@ -130,8 +159,8 @@ const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => 
           target="_blank"
           rel="noopener noreferrer"
           className={`inline-block px-4 py-2 rounded-md ${
-            darkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+            darkMode
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
               : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
         >
@@ -142,4 +171,4 @@ const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => 
   );
 };
 
-export default IssueModal; 
+export default IssueModal;
