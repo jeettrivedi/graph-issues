@@ -38,7 +38,6 @@ jobs:
         id: commit
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "commit_msg=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
       # Use a more descriptive name for the token
       - name: Checkout target repository
@@ -77,7 +76,6 @@ jobs:
             This PR updates the graph-issues application with the latest changes from the main branch.
 
             ---
-            > Source: ${{ steps.commit.outputs.commit_msg }} (${{ steps.commit.outputs.sha_short }})" \
             --label "automated-pr"
         env:
           GITHUB_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }} 
