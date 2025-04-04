@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Toaster, toast } from "react-hot-toast";
-import { FiSun, FiMoon } from "react-icons/fi";
-import GraphVisualization, { Node } from "./components/GraphVisualization";
+import React, { useState, useEffect, useRef } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
+import { FiSun, FiMoon } from 'react-icons/fi';
+import GraphVisualization, { Node } from './components/GraphVisualization';
 
 interface GitHubIssue {
   number: number;
@@ -32,8 +32,8 @@ interface HoveredNode {
 }
 
 function App() {
-  const [repoUrl, setRepoUrl] = useState("");
-  const [token, setToken] = useState("");
+  const [repoUrl, setRepoUrl] = useState('');
+  const [token, setToken] = useState('');
   const [_issues, setIssues] = useState<GitHubIssue[]>([]);
   const [graphData, setGraphData] = useState<{
     nodes: Node[];
@@ -43,7 +43,7 @@ function App() {
   const [_hoverNode, setHoveredNode] = useState<HoveredNode | null>(null);
   const [_selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("darkMode") === "true";
+    return localStorage.getItem('darkMode') === 'true';
   });
   const hasShownWarning = useRef(false);
 
@@ -51,14 +51,14 @@ function App() {
     const bodyClass = document.body.classList;
 
     if (darkMode) {
-      bodyClass.add("dark");
+      bodyClass.add('dark');
     } else {
-      bodyClass.remove("dark");
+      bodyClass.remove('dark');
     }
 
     // Cleanup function to ensure no memory leaks
     return () => {
-      bodyClass.remove("dark");
+      bodyClass.remove('dark');
     };
   }, [darkMode]);
 
@@ -69,7 +69,7 @@ function App() {
   };
 
   const extractRepoInfo = (url: string) => {
-    const parts = url.replace("https://github.com/", "").split("/");
+    const parts = url.replace('https://github.com/', '').split('/');
     return { owner: parts[0], repo: parts[1] };
   };
 
@@ -119,7 +119,7 @@ function App() {
       });
 
       // Find references in issue body and comments
-      const bodyRefs = findIssueReferences(issue.body || "");
+      const bodyRefs = findIssueReferences(issue.body || '');
       const comments = commentsMap.get(issue.number) || [];
       const commentRefs = comments.flatMap((comment) =>
         findIssueReferences(comment.body)
@@ -152,7 +152,7 @@ function App() {
 
   const fetchWithAuth = (url: string) => {
     const headers: Record<string, string> = {
-      Accept: "application/vnd.github.v3+json",
+      Accept: 'application/vnd.github.v3+json',
     };
 
     if (token) {
@@ -173,9 +173,9 @@ function App() {
       // Check if we're about to exceed the request limit
       if (requestCount >= requestLimit) {
         toast(
-          "Request limit reached. Please provide a GitHub token to fetch more issues.",
+          'Request limit reached. Please provide a GitHub token to fetch more issues.',
           {
-            icon: "⚠️",
+            icon: '⚠️',
             duration: 4000,
           }
         );
@@ -191,18 +191,18 @@ function App() {
         // Check for rate limit exceeded
         if (response.status === 403) {
           const rateLimitRemaining = response.headers.get(
-            "x-ratelimit-remaining"
+            'x-ratelimit-remaining'
           );
-          if (rateLimitRemaining === "0") {
+          if (rateLimitRemaining === '0') {
             const resetTime = new Date(
-              Number(response.headers.get("x-ratelimit-reset")) * 1000
+              Number(response.headers.get('x-ratelimit-reset')) * 1000
             );
             throw new Error(
               `GitHub API rate limit exceeded. Rate limit will reset at ${resetTime.toLocaleString()}`
             );
           }
         }
-        throw new Error("Failed to fetch issues");
+        throw new Error('Failed to fetch issues');
       }
 
       const issues = await response.json();
@@ -213,19 +213,19 @@ function App() {
 
       // Add a loading toast to show progress
       toast.loading(`Loaded ${allIssues.length} issues...`, {
-        id: "loading-issues",
+        id: 'loading-issues',
       });
 
       // Check remaining rate limit
       const rateLimitRemaining = Number(
-        response.headers.get("x-ratelimit-remaining")
+        response.headers.get('x-ratelimit-remaining')
       );
       if (rateLimitRemaining <= 1) {
         // Leave 1 request as buffer
         toast(
-          "Approaching rate limit. Please provide a GitHub token to fetch more issues.",
+          'Approaching rate limit. Please provide a GitHub token to fetch more issues.',
           {
-            icon: "⚠️",
+            icon: '⚠️',
             duration: 4000,
           }
         );
@@ -234,7 +234,7 @@ function App() {
     }
 
     // Dismiss the loading toast
-    toast.dismiss("loading-issues");
+    toast.dismiss('loading-issues');
 
     return allIssues;
   };
@@ -242,7 +242,7 @@ function App() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateGitHubUrl(repoUrl)) {
-      toast.error("Please enter a valid GitHub repository URL");
+      toast.error('Please enter a valid GitHub repository URL');
       return;
     }
 
@@ -254,18 +254,18 @@ function App() {
       if (!token && !hasShownWarning.current) {
         hasShownWarning.current = true;
         toast(
-          "No GitHub token provided. You will be limited to 60 requests per hour. For higher limits, please provide a GitHub token.",
+          'No GitHub token provided. You will be limited to 60 requests per hour. For higher limits, please provide a GitHub token.',
           {
-            icon: "⚠️",
+            icon: '⚠️',
             duration: 6000,
           }
         );
 
         // Show additional rate limit info
         toast(
-          "Without a token: 60 requests/hour\nWith a token: 5,000 requests/hour",
+          'Without a token: 60 requests/hour\nWith a token: 5,000 requests/hour',
           {
-            icon: "ℹ️",
+            icon: 'ℹ️',
             duration: 6000,
           }
         );
@@ -306,11 +306,10 @@ function App() {
         toast.success(`Loaded ${issuesData.length} issues successfully`);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to fetch repository data");
+        toast.error('Failed to fetch repository data');
       }
     } finally {
       setLoading(false);
@@ -320,13 +319,25 @@ function App() {
   return (
     <div className="min-h-screen h-screen flex flex-col">
       <Toaster position="top-right" />
-      <div className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 text-white py-3 px-4 
-        shadow-lg border-b border-gray-800/60 relative z-30">
+      <div
+        className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 text-white py-3 px-4 
+        shadow-lg border-b border-gray-800/60 relative z-30"
+      >
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center space-x-2">
-            <svg className="w-8 h-8 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <svg
+              className="w-8 h-8 text-indigo-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
               GitHub Issues Graph
@@ -349,8 +360,10 @@ function App() {
                     hover:bg-white dark:hover:bg-gray-800/70"
                   required
                 />
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
-                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
+                <div
+                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
+                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none"
+                />
               </div>
 
               <div className="relative group">
@@ -366,8 +379,10 @@ function App() {
                     py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                     hover:bg-white dark:hover:bg-gray-800/70"
                 />
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
-                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
+                <div
+                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
+                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none"
+                />
               </div>
 
               <button
@@ -375,13 +390,14 @@ function App() {
                 disabled={loading}
                 className={`relative overflow-hidden rounded-lg px-5 py-2 font-medium text-white
                   transition-all duration-200 
-                  ${loading ? 
-                    'bg-gray-600 cursor-not-allowed' : 
-                    'bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/25'
+                  ${
+                    loading
+                      ? 'bg-gray-600 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/25'
                   }`}
               >
                 <span className="relative z-10">
-                  {loading ? "Loading..." : "Load"}
+                  {loading ? 'Loading...' : 'Load'}
                 </span>
               </button>
             </form>
@@ -390,7 +406,7 @@ function App() {
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:bg-gray-800/70 
                 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {darkMode ? (
                 <FiSun className="w-5 h-5 text-yellow-400" />

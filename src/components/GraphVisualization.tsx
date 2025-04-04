@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import {
   SigmaContainer,
   ControlsContainer,
@@ -8,13 +8,12 @@ import {
   useSigma,
   useRegisterEvents,
   useSetSettings,
-} from "@react-sigma/core";
-import { DirectedGraph } from "graphology";
-// @ts-ignore
-import "@react-sigma/core/lib/style.css";
-import { LayoutForceAtlas2Control } from "@react-sigma/layout-forceatlas2";
-import IssueModal from "./IssueModal";
-import { useLayoutCircular } from "@react-sigma/layout-circular";
+} from '@react-sigma/core';
+import { DirectedGraph } from 'graphology';
+import '@react-sigma/core/lib/style.css';
+import { LayoutForceAtlas2Control } from '@react-sigma/layout-forceatlas2';
+import IssueModal from './IssueModal';
+import { useLayoutCircular } from '@react-sigma/layout-circular';
 
 export interface Node {
   id: string;
@@ -61,7 +60,7 @@ const LoadGraph: React.FC<{
   const sigma = useSigma();
   const registerEvents = useRegisterEvents();
   const setSettings = useSetSettings();
-  const prevGraphDataRef = useRef<string>("");
+  const prevGraphDataRef = useRef<string>('');
 
   // Reset and initialize graph when graphData changes
   useEffect(() => {
@@ -88,8 +87,9 @@ const LoadGraph: React.FC<{
 
       graphData.edges.forEach((edge) => {
         graph.addDirectedEdge(edge.source, edge.target, {
-          size: 1,
-          color: darkMode ? "#4B5563" : "#666",
+          size: 2,
+          color: darkMode ? '#4B5563' : '#666',
+          type: 'arrow',
         });
       });
 
@@ -97,7 +97,7 @@ const LoadGraph: React.FC<{
       assign();
       prevGraphDataRef.current = currentGraphDataStr;
     }
-  }, [graphData, loadGraph, darkMode]);
+  }, [graphData, assign, loadGraph, darkMode]);
 
   // Update edge colors when dark mode changes
   useEffect(() => {
@@ -105,7 +105,7 @@ const LoadGraph: React.FC<{
     if (!graph) return;
 
     graph.forEachEdge((edge) => {
-      graph.setEdgeAttribute(edge, "color", darkMode ? "#4B5563" : "#666");
+      graph.setEdgeAttribute(edge, 'color', darkMode ? '#4B5563' : '#666');
     });
   }, [darkMode, sigma]);
 
@@ -150,7 +150,7 @@ const LoadGraph: React.FC<{
     setSettings({
       renderLabels: false,
       labelColor: {
-        color: "black",
+        color: 'black',
       },
       nodeReducer: (_node, data) => {
         const res = { ...data };
@@ -158,17 +158,19 @@ const LoadGraph: React.FC<{
         if (firstLabel) {
           res.color = `#${firstLabel.color}`;
         } else {
-          res.color = "#000000";
+          res.color = '#000000';
         }
         // Add border color based on dark mode
-        res.borderColor = darkMode ? "#ffffff" : "#000000";
+        res.borderColor = darkMode ? '#ffffff' : '#000000';
         res.borderSize = 10;
         return res;
       },
       edgeReducer: (_edge, data) => {
         return {
           ...data,
-          color: darkMode ? "#4B5563" : "#666",
+          color: darkMode ? '#4B5563' : '#666',
+          type: 'arrow',
+          size: 1,
         };
       },
     });
@@ -193,22 +195,19 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   };
 
   const handleNodeClick = (node: Node | null) => {
-    console.log("Node clicked:", node);
     setSelectedNode(node);
     onNodeClick(node);
   };
 
   const containerClasses =
-    "flex flex-col gap-2 p-2 backdrop-blur-sm dark:border dark:border-gray-600 bg-white/80 border border-black/10";
+    'flex flex-col gap-2 p-2 backdrop-blur-sm dark:border dark:border-gray-600 bg-white/80 border border-black/10';
 
   const buttonClasses =
-    "p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200 dark:border bg-white/80 border border-black/10";
+    'p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200 dark:border bg-white/80 border border-black/10';
 
   return (
     <div className="w-full h-full">
-      <SigmaContainer
-      className="h-full w-full dark:bg-gray-900 bg-white"
-      >
+      <SigmaContainer className="h-full w-full dark:bg-gray-900 bg-white">
         <LoadGraph
           graphData={graphData}
           onNodeHover={onNodeHover}
