@@ -1,0 +1,83 @@
+name: Deploy to GitHub Pages
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    # Only run if the PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    # Add permission for the GITHUB_TOKEN to read the source repo
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+        env:
+          VITE_BASE_URL: '/graph-issues'
+
+      # Store the commit info before checking out target repo
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "commit_msg=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
+      # Use a more descriptive name for the token
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: jeettrivedi/jeettrivedi.github.io
+          # Token with only repository contents write permission to jeettrivedi.github.io
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          path: target-repo
+
+      - name: Copy build files
+        run: |
+          mkdir -p target-repo/graph-issues
+          cp -r dist/* target-repo/graph-issues/
+
+      - name: Create Pull Request
+        run: |
+          cd target-repo
+          # Create a new branch with timestamp
+          BRANCH_NAME="update-graph-issues-$(date +%Y%m%d-%H%M%S)"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b $BRANCH_NAME
+          git add graph-issues
+          git commit -m "chore(deploy): update graph-issues application" || exit 0
+          git push origin $BRANCH_NAME
+          
+          # Create PR using GitHub CLI
+          gh pr create \
+            --repo jeettrivedi/jeettrivedi.github.io \
+            --base main \
+            --head $BRANCH_NAME \
+            --title "chore(deploy): update graph-issues application" \
+            --body "Automated PR to update graph-issues deployment from latest main branch build.
+
+            This PR updates the graph-issues application with the latest changes from the main branch.
+
+            ---
+            > Source: ${{ steps.commit.outputs.commit_msg }} (${{ steps.commit.outputs.sha_short }})" \
+            --label "automated-pr"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }} 
