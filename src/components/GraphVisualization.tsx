@@ -49,7 +49,6 @@ interface GraphVisualizationProps {
   darkMode: boolean;
 }
 
-
 const LoadGraph: React.FC<{ 
   graphData: GraphData; 
   onNodeHover: (node: Node | null) => void; 
@@ -167,7 +166,7 @@ const LoadGraph: React.FC<{
         }
         // Add border color based on dark mode
         res.borderColor = darkMode ? '#ffffff' : '#000000';
-        res.borderSize = 1;
+        res.borderSize = 10;
         return res;
       },
       edgeReducer: (edge, data) => {
@@ -198,10 +197,26 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   };
 
   const handleNodeClick = (node: Node | null) => {
-    console.log("Node clicked:", node); // Add logging to debug
+    console.log("Node clicked:", node);
     setSelectedNode(node);
     onNodeClick(node);
   };
+
+  const containerClasses = `
+    flex flex-col gap-2 p-2 rounded-lg backdrop-blur-sm
+    ${darkMode 
+      ? 'bg-gray-800/90 border border-gray-600' 
+      : 'bg-white/80 border border-black/10'
+    } shadow-lg
+  `;
+
+  const buttonClasses = `
+    p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200
+    ${darkMode
+      ? 'bg-black-700 border border-gray-500 text-black'
+      : 'bg-white border border-black/10 text-black'
+    }
+  `;
 
   return (
     <div className="w-full h-full">
@@ -218,12 +233,16 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
           onNodeClick={handleNodeClick}
           darkMode={darkMode}
         />
-        <ControlsContainer position="bottom-right">
-          <ZoomControl />
-          <LayoutForceAtlas2Control settings={forceAtlasSettings} />
-        </ControlsContainer>
-        <ControlsContainer position="top-right">
-          <FullScreenControl />
+        <ControlsContainer 
+          position="bottom-right" 
+          className={containerClasses}
+        >
+          <ZoomControl className={buttonClasses} />
+          <LayoutForceAtlas2Control 
+            className={buttonClasses}
+            settings={forceAtlasSettings} 
+          />
+          <FullScreenControl className={buttonClasses} />
         </ControlsContainer>
       </SigmaContainer>
       <IssueModal
