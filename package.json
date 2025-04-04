@@ -13,7 +13,6 @@
     "@react-sigma/layout-circular": "^5.0.2",
     "@react-sigma/layout-core": "^5.0.2",
     "@react-sigma/layout-forceatlas2": "^5.0.2",
-    "@react-sigma/layout-random": "^5.0.2",
     "graphology": "^0.25.4",
     "graphology-types": "^0.24.8",
     "react": "^18.2.0",
@@ -25,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",
+    "@tsconfig/vite-react": "^3.4.0",
     "@types/node": "^20.11.28",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",

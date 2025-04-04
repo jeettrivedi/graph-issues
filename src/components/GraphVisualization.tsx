@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   SigmaContainer,
   ControlsContainer,
@@ -7,13 +7,14 @@ import {
   useLoadGraph,
   useSigma,
   useRegisterEvents,
-  useSetSettings
+  useSetSettings,
 } from "@react-sigma/core";
 import { DirectedGraph } from "graphology";
-import '@react-sigma/core/lib/style.css';
-import { LayoutForceAtlas2Control } from '@react-sigma/layout-forceatlas2';
-import IssueModal from './IssueModal';
-import { useLayoutCircular } from '@react-sigma/layout-circular';
+// @ts-ignore
+import "@react-sigma/core/lib/style.css";
+import { LayoutForceAtlas2Control } from "@react-sigma/layout-forceatlas2";
+import IssueModal from "./IssueModal";
+import { useLayoutCircular } from "@react-sigma/layout-circular";
 
 export interface Node {
   id: string;
@@ -49,51 +50,46 @@ interface GraphVisualizationProps {
   darkMode: boolean;
 }
 
-const LoadGraph: React.FC<{ 
-  graphData: GraphData; 
-  onNodeHover: (node: Node | null) => void; 
+const LoadGraph: React.FC<{
+  graphData: GraphData;
+  onNodeHover: (node: Node | null) => void;
   onNodeClick: (node: Node | null) => void;
   darkMode: boolean;
-}> = ({ 
-  graphData,
-  onNodeHover,
-  onNodeClick,
-  darkMode
-}) => {
+}> = ({ graphData, onNodeHover, onNodeClick, darkMode }) => {
   const loadGraph = useLoadGraph();
-  const {positions, assign} = useLayoutCircular();
+  const { assign } = useLayoutCircular();
   const sigma = useSigma();
   const registerEvents = useRegisterEvents();
   const setSettings = useSetSettings();
-  const prevGraphDataRef = useRef<string>('');
+  const prevGraphDataRef = useRef<string>("");
 
   // Reset and initialize graph when graphData changes
   useEffect(() => {
     // Create a string representation of the graph data to compare
     const currentGraphDataStr = JSON.stringify(graphData);
-    
+
     // Only recreate the graph if the data has changed
     if (currentGraphDataStr !== prevGraphDataRef.current) {
       const graph = new DirectedGraph();
-      
+
       graphData.nodes.forEach((node) => {
         // Add random initial positions to spread nodes out
         const x = 0;
         const y = 0;
-        
+
         graph.addNode(node.id, {
           label: node.label,
           size: node.size * 4,
           x,
           y,
-          attributes: node.attributes
+          attributes: node.attributes,
         });
       });
 
       graphData.edges.forEach((edge) => {
         graph.addDirectedEdge(edge.source, edge.target, {
           size: 1,
-          color: darkMode ? '#4B5563' : '#666'
+          color: darkMode ? "#4B5563" : "#666",
         });
       });
 
@@ -107,9 +103,9 @@ const LoadGraph: React.FC<{
   useEffect(() => {
     const graph = sigma.getGraph();
     if (!graph) return;
-    
+
     graph.forEachEdge((edge) => {
-      graph.setEdgeAttribute(edge, 'color', darkMode ? '#4B5563' : '#666');
+      graph.setEdgeAttribute(edge, "color", darkMode ? "#4B5563" : "#666");
     });
   }, [darkMode, sigma]);
 
@@ -124,7 +120,7 @@ const LoadGraph: React.FC<{
             id: node,
             label: nodeData.label,
             size: nodeData.size,
-            attributes: nodeData.attributes
+            attributes: nodeData.attributes,
           });
         } else {
           onNodeHover(null);
@@ -141,12 +137,12 @@ const LoadGraph: React.FC<{
             id: node,
             label: nodeData.label,
             size: nodeData.size,
-            attributes: nodeData.attributes
+            attributes: nodeData.attributes,
           });
         } else {
           onNodeClick(null);
         }
-      }
+      },
     });
   }, [registerEvents, sigma, onNodeHover, onNodeClick]);
 
@@ -154,27 +150,27 @@ const LoadGraph: React.FC<{
     setSettings({
       renderLabels: false,
       labelColor: {
-        color: darkMode ? '#ffffff' : '#000000'
+        color: "black",
       },
-      nodeReducer: (node, data) => {
+      nodeReducer: (_node, data) => {
         const res = { ...data };
         const firstLabel = data.attributes.labels[0];
         if (firstLabel) {
           res.color = `#${firstLabel.color}`;
         } else {
-          res.color = '#000000';
+          res.color = "#000000";
         }
         // Add border color based on dark mode
-        res.borderColor = darkMode ? '#ffffff' : '#000000';
+        res.borderColor = darkMode ? "#ffffff" : "#000000";
         res.borderSize = 10;
         return res;
       },
-      edgeReducer: (edge, data) => {
+      edgeReducer: (_edge, data) => {
         return {
           ...data,
-          color: darkMode ? '#4B5563' : '#666'
+          color: darkMode ? "#4B5563" : "#666",
         };
-      }
+      },
     });
   }, [setSettings, darkMode]);
 
@@ -185,7 +181,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   graphData,
   onNodeHover,
   onNodeClick,
-  darkMode
+  darkMode,
 }) => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const forceAtlasSettings = {
@@ -202,45 +198,28 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     onNodeClick(node);
   };
 
-  const containerClasses = `
-    flex flex-col gap-2 p-2 rounded-lg backdrop-blur-sm
-    ${darkMode 
-      ? 'bg-gray-800/90 border border-gray-600' 
-      : 'bg-white/80 border border-black/10'
-    } shadow-lg
-  `;
+  const containerClasses =
+    "flex flex-col gap-2 p-2 rounded-lg backdrop-blur-sm dark:border dark:border-gray-600 bg-white/80 border border-black/10";
 
-  const buttonClasses = `
-    p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200
-    ${darkMode
-      ? 'bg-black-700 border border-gray-500 text-black'
-      : 'bg-white border border-black/10 text-black'
-    }
-  `;
+  const buttonClasses =
+    "p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200 dark:border bg-white/80 border border-black/10";
 
   return (
     <div className="w-full h-full">
       <SigmaContainer
-        style={{ 
-          height: '100%', 
-          width: '100%',
-          backgroundColor: darkMode ? '#111827' : '#ffffff'
-        }}
+      className="h-full w-full dark:bg-gray-800 bg-white"
       >
-        <LoadGraph 
-          graphData={graphData} 
-          onNodeHover={onNodeHover} 
+        <LoadGraph
+          graphData={graphData}
+          onNodeHover={onNodeHover}
           onNodeClick={handleNodeClick}
           darkMode={darkMode}
         />
-        <ControlsContainer 
-          position="bottom-right" 
-          className={containerClasses}
-        >
+        <ControlsContainer position="bottom-right" className={containerClasses}>
           <ZoomControl className={buttonClasses} />
-          <LayoutForceAtlas2Control 
+          <LayoutForceAtlas2Control
             className={buttonClasses}
-            settings={forceAtlasSettings} 
+            settings={forceAtlasSettings}
           />
           <FullScreenControl className={buttonClasses} />
         </ControlsContainer>
@@ -254,4 +233,4 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   );
 };
 
-export default GraphVisualization; 
+export default GraphVisualization;

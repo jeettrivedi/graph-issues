@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
-import { FiSun, FiMoon } from 'react-icons/fi';
-import GraphVisualization, { Node } from './components/GraphVisualization';
+import React, { useState, useEffect, useRef } from "react";
+import { Toaster, toast } from "react-hot-toast";
+import { FiSun, FiMoon } from "react-icons/fi";
+import GraphVisualization, { Node } from "./components/GraphVisualization";
 
 interface GitHubIssue {
   number: number;
@@ -32,15 +32,18 @@ interface HoveredNode {
 }
 
 function App() {
-  const [repoUrl, setRepoUrl] = useState('');
-  const [token, setToken] = useState('');
-  const [issues, setIssues] = useState<GitHubIssue[]>([]);
-  const [graphData, setGraphData] = useState<{ nodes: Node[]; edges: Array<{ id: string; source: string; target: string }> }>({ nodes: [], edges: [] });
+  const [repoUrl, setRepoUrl] = useState("");
+  const [token, setToken] = useState("");
+  const [_issues, setIssues] = useState<GitHubIssue[]>([]);
+  const [graphData, setGraphData] = useState<{
+    nodes: Node[];
+    edges: Array<{ id: string; source: string; target: string }>;
+  }>({ nodes: [], edges: [] });
   const [loading, setLoading] = useState(false);
-  const [hoveredNode, setHoveredNode] = useState<HoveredNode | null>(null);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [_hoverNode, setHoveredNode] = useState<HoveredNode | null>(null);
+  const [_selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true';
+    return localStorage.getItem("darkMode") === "true";
   });
   const hasShownWarning = useRef(false);
 
@@ -60,22 +63,26 @@ function App() {
   }, [darkMode]);
 
   const validateGitHubUrl = (url: string): boolean => {
-    const githubUrlPattern = /^https:\/\/github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-._]+\/?$/;
+    const githubUrlPattern =
+      /^https:\/\/github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-._]+\/?$/;
     return githubUrlPattern.test(url);
   };
 
   const extractRepoInfo = (url: string) => {
-    const parts = url.replace('https://github.com/', '').split('/');
+    const parts = url.replace("https://github.com/", "").split("/");
     return { owner: parts[0], repo: parts[1] };
   };
 
   const findIssueReferences = (text: string): number[] => {
     // Match #number patterns that reference issues
     const matches = text.match(/#(\d+)/g) || [];
-    return matches.map(match => parseInt(match.substring(1)));
+    return matches.map((match) => parseInt(match.substring(1)));
   };
 
-  const buildGraphData = (issues: GitHubIssue[], commentsMap: Map<number, GitHubComment[]>) => {
+  const buildGraphData = (
+    issues: GitHubIssue[],
+    commentsMap: Map<number, GitHubComment[]>
+  ) => {
     // Create nodes and edges first
     const nodes: Node[] = [];
     const edges: Array<{ id: string; source: string; target: string }> = [];
@@ -83,16 +90,16 @@ function App() {
     const inDegreeCount = new Map<string, number>();
 
     // Create a map of all issues for quick lookup
-    issues.forEach(issue => {
+    issues.forEach((issue) => {
       issueMap.set(issue.number, issue);
       // Initialize in-degree count for each issue
       inDegreeCount.set(`${issue.number}`, 0);
     });
 
     // Create nodes and collect edges
-    issues.forEach(issue => {
+    issues.forEach((issue) => {
       const issueId = `${issue.number}`;
-      
+
       // Create node (size will be set after counting edges)
       nodes.push({
         id: issueId,
@@ -107,24 +114,26 @@ function App() {
           labels: issue.labels,
           url: issue.html_url,
           author: issue.user.login,
-          authorAvatar: issue.user.avatar_url
-        }
+          authorAvatar: issue.user.avatar_url,
+        },
       });
 
       // Find references in issue body and comments
-      const bodyRefs = findIssueReferences(issue.body || '');
+      const bodyRefs = findIssueReferences(issue.body || "");
       const comments = commentsMap.get(issue.number) || [];
-      const commentRefs = comments.flatMap(comment => findIssueReferences(comment.body));
+      const commentRefs = comments.flatMap((comment) =>
+        findIssueReferences(comment.body)
+      );
       const allRefs = [...new Set([...bodyRefs, ...commentRefs])];
 
       // Create edges and count incoming references
-      allRefs.forEach(refNumber => {
+      allRefs.forEach((refNumber) => {
         if (issueMap.has(refNumber) && refNumber !== issue.number) {
           const refId = `${refNumber}`;
           edges.push({
             id: `${issueId}-${refId}`,
             source: issueId,
-            target: refId
+            target: refId,
           });
           // Increment in-degree count for the target node
           inDegreeCount.set(refId, (inDegreeCount.get(refId) || 0) + 1);
@@ -133,7 +142,7 @@ function App() {
     });
 
     // Update node sizes based on in-degree
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const inDegree = inDegreeCount.get(node.id) || 0;
       node.size = Math.max(1, inDegree + 1); // Add 1 to make sure even nodes with no incoming edges are visible
     });
@@ -143,7 +152,7 @@ function App() {
 
   const fetchWithAuth = (url: string) => {
     const headers: Record<string, string> = {
-      Accept: 'application/vnd.github.v3+json'
+      Accept: "application/vnd.github.v3+json",
     };
 
     if (token) {
@@ -159,14 +168,17 @@ function App() {
     const per_page = 100; // Maximum allowed by GitHub API
     const requestLimit = !token ? 60 : Infinity; // Limit requests if no token
     let requestCount = 0;
-    
+
     while (true) {
       // Check if we're about to exceed the request limit
       if (requestCount >= requestLimit) {
-        toast('Request limit reached. Please provide a GitHub token to fetch more issues.', {
-          icon: '⚠️',
-          duration: 4000
-        });
+        toast(
+          "Request limit reached. Please provide a GitHub token to fetch more issues.",
+          {
+            icon: "⚠️",
+            duration: 4000,
+          }
+        );
         break;
       }
 
@@ -174,49 +186,63 @@ function App() {
       const response = await fetchWithAuth(
         `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=${per_page}&page=${page}`
       );
-      
+
       if (!response.ok) {
         // Check for rate limit exceeded
         if (response.status === 403) {
-          const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
-          if (rateLimitRemaining === '0') {
-            const resetTime = new Date(Number(response.headers.get('x-ratelimit-reset')) * 1000);
-            throw new Error(`GitHub API rate limit exceeded. Rate limit will reset at ${resetTime.toLocaleString()}`);
+          const rateLimitRemaining = response.headers.get(
+            "x-ratelimit-remaining"
+          );
+          if (rateLimitRemaining === "0") {
+            const resetTime = new Date(
+              Number(response.headers.get("x-ratelimit-reset")) * 1000
+            );
+            throw new Error(
+              `GitHub API rate limit exceeded. Rate limit will reset at ${resetTime.toLocaleString()}`
+            );
           }
         }
-        throw new Error('Failed to fetch issues');
+        throw new Error("Failed to fetch issues");
       }
-      
+
       const issues = await response.json();
       if (issues.length === 0) break;
-      
+
       allIssues = [...allIssues, ...issues];
       page++;
 
       // Add a loading toast to show progress
-      toast.loading(`Loaded ${allIssues.length} issues...`, { id: 'loading-issues' });
+      toast.loading(`Loaded ${allIssues.length} issues...`, {
+        id: "loading-issues",
+      });
 
       // Check remaining rate limit
-      const rateLimitRemaining = Number(response.headers.get('x-ratelimit-remaining'));
-      if (rateLimitRemaining <= 1) { // Leave 1 request as buffer
-        toast('Approaching rate limit. Please provide a GitHub token to fetch more issues.', {
-          icon: '⚠️',
-          duration: 4000
-        });
+      const rateLimitRemaining = Number(
+        response.headers.get("x-ratelimit-remaining")
+      );
+      if (rateLimitRemaining <= 1) {
+        // Leave 1 request as buffer
+        toast(
+          "Approaching rate limit. Please provide a GitHub token to fetch more issues.",
+          {
+            icon: "⚠️",
+            duration: 4000,
+          }
+        );
         break;
       }
     }
 
     // Dismiss the loading toast
-    toast.dismiss('loading-issues');
-    
+    toast.dismiss("loading-issues");
+
     return allIssues;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateGitHubUrl(repoUrl)) {
-      toast.error('Please enter a valid GitHub repository URL');
+      toast.error("Please enter a valid GitHub repository URL");
       return;
     }
 
@@ -227,16 +253,22 @@ function App() {
       // Show warning if no token is provided and we haven't shown it before
       if (!token && !hasShownWarning.current) {
         hasShownWarning.current = true;
-        toast('No GitHub token provided. You will be limited to 60 requests per hour. For higher limits, please provide a GitHub token.', {
-          icon: '⚠️',
-          duration: 6000
-        });
-        
+        toast(
+          "No GitHub token provided. You will be limited to 60 requests per hour. For higher limits, please provide a GitHub token.",
+          {
+            icon: "⚠️",
+            duration: 6000,
+          }
+        );
+
         // Show additional rate limit info
-        toast('Without a token: 60 requests/hour\nWith a token: 5,000 requests/hour', {
-          icon: 'ℹ️',
-          duration: 6000
-        });
+        toast(
+          "Without a token: 60 requests/hour\nWith a token: 5,000 requests/hour",
+          {
+            icon: "ℹ️",
+            duration: 6000,
+          }
+        );
       }
 
       // Fetch all issues with pagination
@@ -247,10 +279,11 @@ function App() {
       const commentsMap = new Map<number, GitHubComment[]>();
       const commentPromises = issuesData.map(async (issue: GitHubIssue) => {
         // Skip if we're approaching the rate limit for non-token users
-        if (!token && commentsMap.size >= 58) { // Leave 2 requests as buffer
+        if (!token && commentsMap.size >= 58) {
+          // Leave 2 requests as buffer
           return;
         }
-        
+
         const commentsResponse = await fetchWithAuth(issue.comments_url);
         if (commentsResponse.ok) {
           const comments = await commentsResponse.json();
@@ -263,19 +296,21 @@ function App() {
       // Build and set graph data
       const newGraphData = buildGraphData(issuesData, commentsMap);
       setGraphData(newGraphData);
-      
+
       // Show success message with appropriate context
       if (!token && issuesData.length > 0) {
-        toast.success(`Loaded ${issuesData.length} issues (limited due to no token)`);
+        toast.success(
+          `Loaded ${issuesData.length} issues (limited due to no token)`
+        );
       } else {
         toast.success(`Loaded ${issuesData.length} issues successfully`);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error('Failed to fetch repository data');
+        toast.error("Failed to fetch repository data");
       }
     } finally {
       setLoading(false);
@@ -298,11 +333,7 @@ function App() {
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className={`w-80 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200
-                    ${darkMode 
-                      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white'
-                    }`}
+                  className={`w-80 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 dark:focus:ring-offset-gray-900" bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white`}
                   required
                 />
               </div>
@@ -314,11 +345,7 @@ function App() {
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="GitHub Token (Optional)"
-                  className={`w-64 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200
-                    ${darkMode 
-                      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white'
-                    }`}
+                  className={`w-64 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 dark:focus:ring-offset-gray-900`}
                 />
               </div>
 
@@ -326,11 +353,14 @@ function App() {
                 type="submit"
                 disabled={loading}
                 className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md
-                  ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'} 
-                  text-white bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                  ${darkMode ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-white'}`}
+                  text-white bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-white dark:ring-offset-gray-900
+                  ${
+                    loading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-indigo-700"
+                  }`}
               >
-                {loading ? 'Loading...' : 'Load'}
+                {loading ? "Loading..." : "Load"}
               </button>
             </form>
 
@@ -339,13 +369,17 @@ function App() {
               className="p-2 rounded-full hover:bg-gray-700 transition-colors"
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {darkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
+              {darkMode ? (
+                <FiSun className="w-5 h-5" />
+              ) : (
+                <FiMoon className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)]">
+      <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] dark:bg-gray-900">
         {graphData.nodes.length > 0 && (
           <div className="h-full">
             <GraphVisualization
@@ -355,7 +389,7 @@ function App() {
                   setHoveredNode({
                     data: node,
                     mouseX: 0,
-                    mouseY: 0
+                    mouseY: 0,
                   });
                 } else {
                   setHoveredNode(null);
