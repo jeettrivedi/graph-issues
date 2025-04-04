@@ -320,66 +320,89 @@ function App() {
   return (
     <div className="min-h-screen h-screen flex flex-col">
       <Toaster position="top-right" />
-      <div className="bg-black text-white py-2 px-4 shadow-lg">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">GitHub Issues Graph</h1>
+      <div className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 text-white py-3 px-4 
+        shadow-lg border-b border-gray-800/60 relative z-30">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center space-x-2">
+            <svg className="w-8 h-8 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
+              GitHub Issues Graph
+            </h1>
+          </div>
 
           <div className="flex items-center gap-4">
-            <form onSubmit={handleSubmit} className="flex items-center gap-4">
-              <div>
+            <form onSubmit={handleSubmit} className="flex items-center gap-3">
+              <div className="relative group">
                 <input
                   type="text"
                   id="repoUrl"
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className={`w-80 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 dark:focus:ring-offset-gray-900" bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:ring-offset-white`}
+                  className="w-[360px] rounded-lg border transition-all duration-200
+                    dark:bg-gray-800/50 dark:border-gray-700 dark:text-white dark:placeholder-gray-400 
+                    bg-white/90 border-gray-300 text-gray-900 placeholder-gray-500
+                    py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                    hover:bg-white dark:hover:bg-gray-800/70"
                   required
                 />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
+                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
               </div>
 
-              <div>
+              <div className="relative group">
                 <input
                   type="password"
                   id="token"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="GitHub Token (Optional)"
-                  className={`w-64 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 sm:text-sm py-2 px-4 transition-colors duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 dark:focus:ring-offset-gray-900`}
+                  className="w-[300px] rounded-lg border transition-all duration-200
+                    dark:bg-gray-800/50 dark:border-gray-700 dark:text-white dark:placeholder-gray-400
+                    bg-white/90 border-gray-300 text-gray-900 placeholder-gray-500
+                    py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                    hover:bg-white dark:hover:bg-gray-800/70"
                 />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 
+                  group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md
-                  text-white bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-white dark:ring-offset-gray-900
-                  ${
-                    loading
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-indigo-700"
+                className={`relative overflow-hidden rounded-lg px-5 py-2 font-medium text-white
+                  transition-all duration-200 
+                  ${loading ? 
+                    'bg-gray-600 cursor-not-allowed' : 
+                    'bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/25'
                   }`}
               >
-                {loading ? "Loading..." : "Load"}
+                <span className="relative z-10">
+                  {loading ? "Loading..." : "Load"}
+                </span>
               </button>
             </form>
 
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:bg-gray-800/70 
+                transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
               {darkMode ? (
-                <FiSun className="w-5 h-5" />
+                <FiSun className="w-5 h-5 text-yellow-400" />
               ) : (
-                <FiMoon className="w-5 h-5" />
+                <FiMoon className="w-5 h-5 text-indigo-400" />
               )}
             </button>
           </div>
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] dark:bg-gray-900">
+      <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] dark:bg-gray-900 relative z-20">
         {graphData.nodes.length > 0 && (
           <div className="h-full">
             <GraphVisualization

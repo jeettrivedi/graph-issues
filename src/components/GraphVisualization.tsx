@@ -199,7 +199,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   };
 
   const containerClasses =
-    "flex flex-col gap-2 p-2 rounded-lg backdrop-blur-sm dark:border dark:border-gray-600 bg-white/80 border border-black/10";
+    "flex flex-col gap-2 p-2 backdrop-blur-sm dark:border dark:border-gray-600 bg-white/80 border border-black/10";
 
   const buttonClasses =
     "p-2 rounded-md cursor-pointer flex items-center justify-center transition-all duration-200 dark:border bg-white/80 border border-black/10";
@@ -207,7 +207,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   return (
     <div className="w-full h-full">
       <SigmaContainer
-      className="h-full w-full dark:bg-gray-800 bg-white"
+      className="h-full w-full dark:bg-gray-900 bg-white"
       >
         <LoadGraph
           graphData={graphData}

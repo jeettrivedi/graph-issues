@@ -20,7 +20,7 @@ const IssueModal: React.FC<IssueModalProps> = ({ issue, darkMode, onClose }) => 
   };
 
   return (
-    <div className={`fixed left-4 top-16 h-[calc(100vh-5rem)] w-96 transform transition-transform duration-300 ease-in-out rounded-xl ${
+    <div className={`fixed left-4 top-20 h-[calc(100vh-6rem)] w-96 transform transition-transform duration-300 ease-in-out rounded-xl z-10 ${
       issue ? 'translate-x-0' : '-translate-x-full'
     } ${darkMode 
       ? 'bg-gray-800 text-white shadow-2xl border border-gray-700' 
